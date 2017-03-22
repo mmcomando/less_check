@@ -1,0 +1,9 @@
+{
+	"name": "less_check",
+	"authors": [
+		"pc"
+	],
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2017, pc",
+	"license": "proprietary"
+}
