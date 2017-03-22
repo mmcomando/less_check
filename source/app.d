@@ -21,17 +21,20 @@ string test1="
 
 ";
 
+	/*import std.conv;
+	string ss="123.312f";
+	double d =parse!double(ss);
+	writeln(ss);*/
+
     Tokenizer tokenizer=new Tokenizer(test1);
 
     while(1){
         tokenizer.popToken();
-        auto tok=tokenizer.currentToken();
-        if(tok==Token.ch){
-        	writeln(tokenizer.currentTokenData.getChar());
-        }else{
+        auto tok=tokenizer.currentTokenData;
+      
         	writeln(tok);
-        }
-        if(tok==Token.none)break;
+        
+        if(tok.token==Token.none)break;
     }
 
 	//writeln("Edit source/app.d to start your project.");
