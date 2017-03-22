@@ -2,6 +2,7 @@ import std.stdio;
 
 
 import tokenizer;
+import ast_check;
 void main()
 {
 
@@ -21,12 +22,8 @@ string test1="
 
 ";
 
-	/*import std.conv;
-	string ss="123.312f";
-	double d =parse!double(ss);
-	writeln(ss);*/
 
-    Tokenizer tokenizer=new Tokenizer(test1);
+    /*Tokenizer tokenizer=new Tokenizer(test1);
 
     while(1){
         tokenizer.popToken();
@@ -35,7 +32,12 @@ string test1="
         	writeln(tok);
         
         if(tok.token==Token.none)break;
-    }
+    }*/
 
-	//writeln("Edit source/app.d to start your project.");
+	AstCheck ast=new AstCheck(test1);
+	try{
+		ast.check();
+	}catch(Exception e){
+		writeln(e);
+	}
 }

@@ -17,6 +17,7 @@ enum Token{
 	var,
 	id_or_color,
 	class_,
+	import_,
 }
 
 void pop(ref string slice){
@@ -41,6 +42,9 @@ struct TokenData{
 	char getChar(){
 		enforce(token==token.ch,"Expected string");
 		return ch;
+	}
+	bool isChar(char character){
+		return token==token.ch && ch==character;
 	}
 
 	string toString(){
@@ -95,6 +99,9 @@ class Tokenizer{
 			}
 
 			if(checkNumber(slice)){    		
+				return;
+			}
+			if(checkImport(slice)){    		
 				return;
 			}
 			if(checkVar(slice)){    		
@@ -195,6 +202,14 @@ class Tokenizer{
 			enforce(checkString(tmpSlice),"After # there should be string");
 			currentTokenData.token=Token.id_or_color;
 			slice=tmpSlice;
+			return true;
+		}
+		return false;
+	}
+	bool checkImport(ref string slice){
+		if(slice.length>=7 && slice[0..7]>="@import" ){
+			currentTokenData.token=Token.import_;
+			slice=slice[7..$];
 			return true;
 		}
 		return false;
