@@ -49,7 +49,7 @@ class Tokenizer{
         return currentTokenData.token;
     }
     void popToken(){
-    	Token lastToken=Token.none;
+	Token lastToken=Token.none;
     	while(1){
     		ignoreComments(slice);
     		bool wasWhite=checkWhite(slice);
@@ -75,8 +75,7 @@ class Tokenizer{
 	    		return;
 	    	}
     	}
-    	currentTokenData.token=lastToken;    	
-	
+	currentTokenData.token=lastToken;
     }
     
     void ignoreComments(ref string str){
@@ -135,6 +134,50 @@ class Tokenizer{
     	}
     	slice=null;
     	return wasWhite;
+    }
+     
+    void getLineAndCol(ref uint line,ref uint col){
+	line=col=0;
+	size_t currentCharNum=orginalData.length-slice.length;
+	foreach(char ch;orginalData[0..currentCharNum]){
+		col++;
+		if(ch=='\n'){
+			line++;
+			col=0;
+		}
+	}
+    }
+    string getLine(uint lineSearch){
+	uint lineStart,lineEnd,line;
+	bool foundStart=false;
+
+	foreach(uint i,char ch;orginalData){
+		if(line==lineSearch && foundStart==false){
+			foundStart=true;
+			lineStart=i;
+		}
+		if(ch=='\n'){
+			line++;
+		
+			if(foundStart){
+				lineEnd=i;
+				break;
+			}
+		}
+	}
+	return orginalData[lineStart..lineEnd];
+    }
+    void printError(string msg){
+		uint line,col;
+		getLineAndCol(line,col);
+		string lineString=getLine(line);
+		writefln("Error: %s",msg);
+		writefln("Line number: %2s, column: %2s. Line:",line,col);
+		writeln(lineString );
+		foreach(i;0..col){
+			write(" ");
+		}
+		writeln("^");
     }
 
 }
