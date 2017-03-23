@@ -230,7 +230,7 @@ class Tokenizer{
 	bool checkIDorColor(ref string slice){
 		if(slice.length>1 && slice[0]=='#' ){
 			string tmpSlice=slice[1..$];
-			enforce(checkString(tmpSlice),"After # there should be string");
+			enforce(checkAfterHash(tmpSlice),"After # there should be string");
 			currentTokenData.token=Token.id_or_color;
 			slice=tmpSlice;
 			return true;
@@ -306,6 +306,20 @@ class Tokenizer{
 			return true;
 		}
 		return false;
+	}
+	bool checkAfterHash(ref string slice){
+		uint charNum=0;
+		foreach(uint i,char ch;slice){
+			if(!isAlphaNum(ch) && ch!='_' && ch!='-'	){
+				break;
+			}
+			charNum++;
+		}
+		currentTokenData.str=slice[0..charNum];
+		currentTokenData.token=Token.str;
+		slice=slice[charNum..$];
+		return true;
+
 	}
 
 	

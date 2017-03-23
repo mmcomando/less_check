@@ -64,7 +64,7 @@ ala:asda;
 		{
 			files~=testFileName;
 		}
-		foreach (i,string testFileName;files.sort[0..4])
+		foreach (i,string testFileName;files.sort[0..6])
 		{
 			string content = readText(testFileName);
 			AstCheck ast=new AstCheck(content);
