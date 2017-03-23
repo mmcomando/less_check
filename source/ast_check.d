@@ -81,11 +81,15 @@ class AstCheck{
 	}
 	void checkStyle(){
 		tokenizer.popToken();//str
-		enforce(tokenizer.currentTokenData.isChar(':'),"Colon expected");
-		tokenizer.popToken();//:
-		while(!tokenizer.currentTokenData.isChar(';') || tokenizer.currentTokenData.isChar('}')){			
-			checkWartosc();
+		if(tokenizer.currentTokenData.isChar(':')){
+			tokenizer.popToken();//:
+			while(!tokenizer.currentTokenData.isChar(';') || tokenizer.currentTokenData.isChar('}')){			
+				checkWartosc();
+			}
+		}else{
+			checkDekGrupy();
 		}
+
 	}
 	void checkMixin(){
 		if(tokenizer.currentTokenData.isChar('(')){
