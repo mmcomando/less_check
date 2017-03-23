@@ -1,7 +1,10 @@
+import core.exception;
 import std.stdio;
 
 
 import tokenizer;
+import ast_check;
+
 void main()
 {
 
@@ -21,18 +24,26 @@ string test1="
 
 ";
 
-    Tokenizer tokenizer=new Tokenizer(test1);
+
+    /*Tokenizer tokenizer=new Tokenizer(test1);
 
     while(1){
         tokenizer.popToken();
-        auto tok=tokenizer.currentToken();
-        if(tok==Token.ch){
-        	writeln(tokenizer.currentTokenData.getChar());
-        }else{
+        auto tok=tokenizer.currentTokenData;
+      
         	writeln(tok);
-        }
-        if(tok==Token.none)break;
-    }
+        
+        if(tok.token==Token.none)break;
+    }*/
 
+	AstCheck ast=new AstCheck(test1);
+	try{
+		ast.check();
+	}catch(Exception e){
+		ast.tokenizer.printError(e.msg);
+	}catch(RangeError e){
+		ast.tokenizer.printError("Range violation near line.");
+	}
 	//writeln("Edit source/app.d to start your project.");
 }
+
