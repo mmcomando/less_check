@@ -15,6 +15,7 @@ enum Token{
 	white,
 	num,
 	var,
+	pixels,
 	id_or_color,
 	class_,
 	import_,
@@ -96,6 +97,10 @@ class Tokenizer{
 			
 			if(slice.length==0){
 				break;
+			}
+
+			if(checkPixels(slice)){    		
+				return;
 			}
 
 			if(checkNumber(slice)){    		
@@ -221,6 +226,18 @@ class Tokenizer{
 			currentTokenData.token=Token.var;
 			slice=tmpSlice;
 			return true;
+		}
+		return false;
+	}
+	bool checkPixels(ref string slice){
+		if(slice.length>2 ){
+			string tmpSlice=slice;
+			bool ok=checkNumber(tmpSlice);
+			if(ok && tmpSlice.length>=2 && tmpSlice[0..2]=="px"){
+				currentTokenData.token=Token.pixels;
+				slice=tmpSlice[2..$];
+				return true;
+			}
 		}
 		return false;
 	}

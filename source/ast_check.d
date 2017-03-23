@@ -48,6 +48,9 @@ class AstCheck{
 	}
 	void checkDekGrupy(){
 		checkListaElementow();
+		
+		checkMixin();
+		
 		enforce(tokenizer.currentTokenData.isChar('{')," '{' expected");
 		tokenizer.popToken();//{
 		checkListaStyli();
@@ -74,8 +77,32 @@ class AstCheck{
 
 		//<lista styli>      := <nazwa> : <wartosc> ";" | <>
 	}
-	void checkDekMixin(){
-		tokenizer.popToken();
+	void checkMixin(){
+		if(tokenizer.currentTokenData.isChar('(')){
+			tokenizer.popToken();//(
+			checkListaParametrow();	
+			writeln(tokenizer.currentTokenData);	
+			enforce(tokenizer.currentTokenData.isChar(')'),"')' expected");
+			tokenizer.popToken();//)
+		}
+	}
+	
+	void checkListaParametrow(){
+		while(tokenizer.currentToken==Token.var){
+			tokenizer.popToken();//var
+			//default value
+			if(tokenizer.currentTokenData.isChar(':')){
+				tokenizer.popToken();//:
+				checkWartosc();
+			}		
+			
+
+			if(!tokenizer.currentTokenData.isChar(',')){
+				break;
+			}else{
+				tokenizer.popToken();//,
+			}
+		}
 	}
 	void checkListaElementow(){
 		while(
@@ -97,10 +124,12 @@ class AstCheck{
 	}
 
 	void checkWartosc(){
+			writeln(tokenizer.currentTokenData);
 		switch(tokenizer.currentToken){
 			//case Token.percentage:
 			case Token.id_or_color:
 			case Token.num:
+			case Token.pixels:
 			case Token.var:
 				tokenizer.popToken();
 				break;
@@ -110,7 +139,7 @@ class AstCheck{
 				break;
 			//wyrazenie
 			default:
-				throw new Exception("Expected new declaration");
+				throw new Exception("Expected some value");
 		}
 	//<wartosc>          := <kolor hex> | <liczba> |  <procent> | <wykonanie> | <nazwa> | "@" <nazwa> | wyrazenie
 	}

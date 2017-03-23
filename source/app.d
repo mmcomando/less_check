@@ -10,7 +10,7 @@ import ast_check;
 void main()
 {
 
-string tests[]=[
+string[] tests=[
 "
 @base:#f04615;
 
@@ -18,6 +18,7 @@ string tests[]=[
 
 }
 
+@xx:20 px;
 
 
 /* One hell of a block style comment! */@var: red; // Get in line!
@@ -43,8 +44,8 @@ ala:asda;
 "
 	];
 
-    /*Tokenizer tokenizer=new Tokenizer(test1);
-
+  Tokenizer tokenizer=new Tokenizer(tests[0]);
+ 
     while(1){
         tokenizer.popToken();
         auto tok=tokenizer.currentTokenData;
@@ -52,7 +53,7 @@ ala:asda;
         	writeln(tok);
         
         if(tok.token==Token.none)break;
-    }*/
+    }
 	foreach(i,test;tests){
 		AstCheck ast=new AstCheck(test);
 		try{
@@ -71,12 +72,12 @@ ala:asda;
 	{
 		files~=testFileName;
 	}
-	foreach (i,string testFileName;files.sort)
+	foreach (i,string testFileName;files.sort[0..4])
 	{
 		string content = readText(testFileName);
 		AstCheck ast=new AstCheck(content);
 		try{
-			writeln(testFileName,": ----------- ",i," -----------");
+			writeln(testFileName,": ----------- ",i+1," -----------");
 			ast.check();
 		}catch(Exception e){
 			ast.tokenizer.printError(e.msg);
