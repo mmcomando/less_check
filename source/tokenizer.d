@@ -84,7 +84,8 @@ struct TokenData{
 class Tokenizer{
 	string orginalData;
 	string slice;
-	uint line=1;
+
+	size_t lastTokenLength;
 
 	TokenData currentTokenData;
 
@@ -96,6 +97,7 @@ class Tokenizer{
 		return currentTokenData.token;
 	}
 	void popToken(){
+		string tmpSlice=slice;
 		Token lastToken=Token.none;
 		while(1){
 			ignoreComments(slice);
@@ -105,34 +107,34 @@ class Tokenizer{
 			}
 			
 			if(slice.length==0){
-				break;
+				currentTokenData.token=Token.none;
+				goto end;
 			}
 
 			/*if(checkPixels(slice)){    		
 			 return;
 			 }*/
 
-			if(checkNumber(slice)){ 
-				
-				return;
+			if(checkNumber(slice)){		
+				goto end;
 			}
-			if(checkImport(slice)){    		
-				return;
+			if(checkImport(slice)){    
+				goto end;
 			}
 			if(checkVar(slice)){    		
-				return;
+				goto end;
 			}
 			if(checkClass(slice)){    		
-				return;
+				goto end;
 			}
 			if(checkIDorColor(slice)){    		
-				return;
+				goto end;
 			}
 			if(checkString(slice)){    		
-				return;
+				goto end;
 			}
 			if(checkOperator(slice)){    		
-				return;
+				goto end;
 			}
 			char ch=slice[0];
 			slice=slice[1..$];
@@ -141,10 +143,14 @@ class Tokenizer{
 			}else{
 				currentTokenData.token=Token.ch;
 				currentTokenData.ch=ch;
-				return;
+				goto end;
 			}
 		}
-		currentTokenData.token=lastToken;    	
+
+	end:
+		lastTokenLength=tmpSlice.length-slice.length;
+		//currentTokenData.token=lastToken; 
+		//writeln(lastTokenLength);
 		
 	}
 	
@@ -159,11 +165,6 @@ class Tokenizer{
 			charsNumToIgnore=str.indexOf("*/");
 			if(charsNumToIgnore!=-1){
 				charsNumToIgnore+=2;
-				foreach(i,char ch;slice[0..charsNumToIgnore]){
-					if(ch=='\n'){
-						line++;
-					}
-				}
 			}
 		}
 		
@@ -176,9 +177,6 @@ class Tokenizer{
 	bool checkWhite(ref string slice){
 		bool wasWhite=false;
 		foreach(i,char ch;slice){
-			if(ch=='\n'){
-				line++;
-			}
 			if(whiteChars.indexOf(ch)==-1){
 				slice=slice[i..$];
 				return wasWhite;
@@ -325,7 +323,7 @@ class Tokenizer{
 	
 	void getLineAndCol(ref uint line,ref uint col){
 		line=col=0;
-		size_t currentCharNum=orginalData.length-slice.length;
+		size_t currentCharNum=orginalData.length-slice.length-lastTokenLength;
 		foreach(char ch;orginalData[0..currentCharNum]){
 			col++;
 			if(ch=='\n'){
