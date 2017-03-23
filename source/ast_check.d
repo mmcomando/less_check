@@ -1,6 +1,8 @@
 module ast_check;
 
 import tokenizer;
+import std.stdio;
+import std.exception;
 
 class AstCheck{
 	Tokenizer tokenizer;
@@ -29,7 +31,7 @@ class AstCheck{
 				checkDekGrupy();
 				break;
 			default:
-				throw new Exception("Bad");
+				throw new Exception("Expected new declaration");
 		}
 	}
 	void checkDekImport(){
@@ -37,10 +39,40 @@ class AstCheck{
 	}
 
 	void checkDekZmiennej(){
-		tokenizer.popToken();
+		tokenizer.popToken();//@xxx
+		enforce(tokenizer.currentTokenData.isChar(':'),"Colon expected");
+		tokenizer.popToken();//:
+		checkWartosc();
+		enforce(tokenizer.currentTokenData.isChar(';'),"Semicolon expected");
+		tokenizer.popToken();//;
 	}
 	void checkDekGrupy(){
-		tokenizer.popToken();
+		checkListaElementow();
+		enforce(tokenizer.currentTokenData.isChar('{')," '{' expected");
+		tokenizer.popToken();//{
+		checkListaStyli();
+		//writeln(tokenizer.currentTokenData);
+		enforce(tokenizer.currentTokenData.isChar('}')," '}' expected");
+		tokenizer.popToken();//}
+	}
+	void checkListaStyli(){
+		while(tokenizer.currentToken==Token.str){
+			tokenizer.popToken();//str
+			enforce(tokenizer.currentTokenData.isChar(':'),"Colon expected");
+			tokenizer.popToken();//:
+			checkWartosc();
+
+			if(tokenizer.currentTokenData.isChar(';')){
+				tokenizer.popToken();//;
+			}else if(!tokenizer.currentTokenData.isChar('}')){
+				enforce(0," '}' expected");
+			}
+			if(tokenizer.currentTokenData.isChar('}')){
+				break;
+			}
+		}
+
+		//<lista styli>      := <nazwa> : <wartosc> ";" | <>
 	}
 	void checkDekMixin(){
 		tokenizer.popToken();
@@ -55,11 +87,45 @@ class AstCheck{
 			checkElement();
 			if(!tokenizer.currentTokenData.isChar(',')){
 				break;
+			}else{
+				tokenizer.popToken();
 			}
 		}
 	}
 	void checkElement(){
 		tokenizer.popToken();
+	}
+
+	void checkWartosc(){
+		switch(tokenizer.currentToken){
+			//case Token.percentage:
+			case Token.id_or_color:
+			case Token.num:
+			case Token.var:
+				tokenizer.popToken();
+				break;
+			case Token.str:
+				tokenizer.popToken();
+				checkWykonanie();
+				break;
+			//wyrazenie
+			default:
+				throw new Exception("Expected new declaration");
+		}
+	//<wartosc>          := <kolor hex> | <liczba> |  <procent> | <wykonanie> | <nazwa> | "@" <nazwa> | wyrazenie
+	}
+	void checkWykonanie(){
+		if(tokenizer.currentTokenData.isChar('(')){
+			tokenizer.popToken();
+			checkListaWartosci();
+			enforce(tokenizer.currentTokenData.isChar(')')," ')' expected");
+			tokenizer.popToken();
+		}
+	}
+	void checkListaWartosci(){
+		while(!tokenizer.currentTokenData.isChar(')')){			
+			checkElement();
+		}
 	}
 
 	/*

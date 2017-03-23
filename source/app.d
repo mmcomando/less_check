@@ -1,5 +1,7 @@
 import core.exception;
 import std.stdio;
+import std.file:dirEntries,SpanMode,readText;
+import std.algorithm:sort;
 
 
 import tokenizer;
@@ -8,7 +10,8 @@ import ast_check;
 void main()
 {
 
-string test1="
+string tests[]=[
+"
 @base:#f04615;
 
 @width:0.5; .class { width: percentage(@width); // returns `50%`color: saturate(@base, 5%); background-color: spin(lighten(@base, 25%), 8);
@@ -22,8 +25,23 @@ string test1="
 @var: white;﻿
 
 
-";
+",
+"
+@base:#f04615;
+@width:0.5; 
 
+.class { 
+width: percentage(@width); 
+ala:asda;
+}
+
+@var: red; 
+
+@var: white;﻿
+
+
+"
+	];
 
     /*Tokenizer tokenizer=new Tokenizer(test1);
 
@@ -35,15 +53,36 @@ string test1="
         
         if(tok.token==Token.none)break;
     }*/
-
-	AstCheck ast=new AstCheck(test1);
-	try{
-		ast.check();
-	}catch(Exception e){
-		ast.tokenizer.printError(e.msg);
-	}catch(RangeError e){
-		ast.tokenizer.printError("Range violation near line.");
+	foreach(i,test;tests){
+		AstCheck ast=new AstCheck(test);
+		try{
+			writeln("----------- ",i," -----------");
+			ast.check();
+		}catch(Exception e){
+			ast.tokenizer.printError(e.msg);
+		}catch(RangeError e){
+			ast.tokenizer.printError("Range violation near line.");
+		}
 	}
-	//writeln("Edit source/app.d to start your project.");
+
+
+	string[] files;
+	foreach (string testFileName;dirEntries("less_tests", SpanMode.shallow))
+	{
+		files~=testFileName;
+	}
+	foreach (i,string testFileName;files.sort)
+	{
+		string content = readText(testFileName);
+		AstCheck ast=new AstCheck(content);
+		try{
+			writeln(testFileName,": ----------- ",i," -----------");
+			ast.check();
+		}catch(Exception e){
+			ast.tokenizer.printError(e.msg);
+		}catch(RangeError e){
+			ast.tokenizer.printError("Range violation near line.");
+		}
+	}
 }
 

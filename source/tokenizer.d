@@ -207,7 +207,7 @@ class Tokenizer{
 		return false;
 	}
 	bool checkImport(ref string slice){
-		if(slice.length>=7 && slice[0..7]>="@import" ){
+		if(slice.length>=7 && slice[0..7]=="@import" ){
 			currentTokenData.token=Token.import_;
 			slice=slice[7..$];
 			return true;
