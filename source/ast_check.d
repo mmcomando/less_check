@@ -54,16 +54,19 @@ class AstCheck{
 		enforce(tokenizer.currentTokenData.isChar('{')," '{' expected");
 		tokenizer.popToken();//{
 		checkListaStyli();
-		//writeln(tokenizer.currentTokenData);
 		enforce(tokenizer.currentTokenData.isChar('}')," '}' expected");
 		tokenizer.popToken();//}
 	}
 	void checkListaStyli(){
-		while(tokenizer.currentToken==Token.str){
-			tokenizer.popToken();//str
-			enforce(tokenizer.currentTokenData.isChar(':'),"Colon expected");
-			tokenizer.popToken();//:
-			checkWartosc();
+		while(tokenizer.currentToken==Token.str || tokenizer.currentToken==Token.class_){
+			if(tokenizer.currentToken==Token.str){
+				checkStyle();
+			}else if(tokenizer.currentToken==Token.class_){
+				tokenizer.popToken();//class_
+				checkWykonanie();
+			}else{
+				assert(0);
+			}
 
 			if(tokenizer.currentTokenData.isChar(';')){
 				tokenizer.popToken();//;
@@ -75,18 +78,40 @@ class AstCheck{
 			}
 		}
 
-		//<lista styli>      := <nazwa> : <wartosc> ";" | <>
+	}
+	void checkStyle(){
+		tokenizer.popToken();//str
+		enforce(tokenizer.currentTokenData.isChar(':'),"Colon expected");
+		tokenizer.popToken();//:
+		while(!tokenizer.currentTokenData.isChar(';') || tokenizer.currentTokenData.isChar('}')){			
+			checkWartosc();
+		}
 	}
 	void checkMixin(){
 		if(tokenizer.currentTokenData.isChar('(')){
 			tokenizer.popToken();//(
 			checkListaParametrow();	
-			writeln(tokenizer.currentTokenData);	
 			enforce(tokenizer.currentTokenData.isChar(')'),"')' expected");
 			tokenizer.popToken();//)
+			if(tokenizer.currentToken==Token.when){
+				tokenizer.popToken();//when
+				if(tokenizer.currentToken==Token.not){
+					tokenizer.popToken();//not			
+				}
+				enforce(tokenizer.currentTokenData.isChar('(')," '(' expected");
+				tokenizer.popToken();
+				checkWarunek();
+				enforce(tokenizer.currentTokenData.isChar(')')," ')' expected");
+				tokenizer.popToken();
+			}
 		}
 	}
-	
+	void checkWarunek(){
+		checkWartosc();
+		if(tokenizer.currentToken==Token.operator){
+			checkWartosc();
+		}
+	}
 	void checkListaParametrow(){
 		while(tokenizer.currentToken==Token.var){
 			tokenizer.popToken();//var
@@ -124,12 +149,14 @@ class AstCheck{
 	}
 
 	void checkWartosc(){
-			writeln(tokenizer.currentTokenData);
+			//writeln(tokenizer.currentTokenData);
 		switch(tokenizer.currentToken){
 			//case Token.percentage:
 			case Token.id_or_color:
 			case Token.num:
 			case Token.pixels:
+			case Token.percentage:
+			case Token.em:
 			case Token.var:
 				tokenizer.popToken();
 				break;
@@ -153,7 +180,10 @@ class AstCheck{
 	}
 	void checkListaWartosci(){
 		while(!tokenizer.currentTokenData.isChar(')')){			
-			checkElement();
+			checkWartosc();
+			if(tokenizer.currentTokenData.isChar(',')){
+				tokenizer.popToken();
+			}
 		}
 	}
 

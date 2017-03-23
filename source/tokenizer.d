@@ -5,7 +5,7 @@ import std.string;
 import std.conv;
 import std.ascii;
 
-immutable char[] endChars="(){}[];";
+//immutable char[] endChars="(){}[];";
 immutable char[] whiteChars=['\n',' ','\t'];
 
 enum Token{
@@ -16,9 +16,14 @@ enum Token{
 	num,
 	var,
 	pixels,
+	percentage,
+	em,
 	id_or_color,
 	class_,
 	import_,
+	when,
+	not,
+	operator,
 }
 
 void pop(ref string slice){
@@ -56,12 +61,16 @@ struct TokenData{
 				dataStr=ch.to!string;
 				break;
 			case Token.num:
+			case Token.percentage:
+			case Token.pixels:
+			case Token.em:
 				dataStr=num.to!string;
 				break;
-			case Token.id_or_color: goto case Token.str;
-			case Token.class_: goto case Token.str;
-			case Token.var: goto case Token.str;
+			case Token.id_or_color:
+			case Token.class_:
+			case Token.var:
 			case Token.str:
+			case Token.operator:
 				dataStr=str;
 				break;
 			default:
@@ -99,11 +108,12 @@ class Tokenizer{
 				break;
 			}
 
-			if(checkPixels(slice)){    		
-				return;
-			}
+			/*if(checkPixels(slice)){    		
+			 return;
+			 }*/
 
-			if(checkNumber(slice)){    		
+			if(checkNumber(slice)){ 
+				
 				return;
 			}
 			if(checkImport(slice)){    		
@@ -121,7 +131,9 @@ class Tokenizer{
 			if(checkString(slice)){    		
 				return;
 			}
-
+			if(checkOperator(slice)){    		
+				return;
+			}
 			char ch=slice[0];
 			slice=slice[1..$];
 			if(ch>127){
@@ -177,13 +189,27 @@ class Tokenizer{
 		slice=null;
 		return wasWhite;
 	}
-	
+
 	bool checkNumber(ref string slice){
-		if(slice[0]>='0' && slice[0]<='0'){
+		if(slice[0]>='0' && slice[0]<='9'){
 			currentTokenData.num=parse!double(slice);
 			currentTokenData.token=Token.num;
-			if(slice[0]=='f'){
+			if(slice.length>=1 && slice[0]=='f'){
 				slice.pop();
+			}else if(slice.length>=1 && slice[0]=='%'){
+				slice.pop();
+				currentTokenData.token=Token.percentage;
+				
+			}else if(slice.length>=2 && slice[0..2]=="px"){
+				slice.pop();
+				slice.pop();
+				currentTokenData.token=Token.pixels;
+				
+			}else if(slice.length>=2 && slice[0..2]=="em"){
+				slice.pop();
+				slice.pop();
+				currentTokenData.token=Token.em;
+				
 			}
 			return true;
 		}
@@ -229,21 +255,38 @@ class Tokenizer{
 		}
 		return false;
 	}
-	bool checkPixels(ref string slice){
-		if(slice.length>2 ){
-			string tmpSlice=slice;
-			bool ok=checkNumber(tmpSlice);
-			if(ok && tmpSlice.length>=2 && tmpSlice[0..2]=="px"){
-				currentTokenData.token=Token.pixels;
-				slice=tmpSlice[2..$];
-				return true;
+	bool checkOperator(ref string slice){
+
+		if(slice.length>=2){
+			switch(slice[0..2]){
+				case ">=":
+				case "<=":
+				case "!=":
+					currentTokenData.str=slice[0..2];	
+					slice.pop();
+					slice.pop();
+					currentTokenData.token=Token.operator;		
+					return true;	
+				default:break;		
 			}
 		}
+
+		switch(slice[0]){
+			case '=':
+			case '>':
+			case '<':
+				currentTokenData.str=slice[0..1];	
+				slice.pop();
+				currentTokenData.token=Token.operator;
+				return true;
+			default:break;
+
+		}
+
 		return false;
 	}
-
 	bool checkString(ref string slice){
-		if(isAlpha(slice[0]) || slice[0]=='_'){
+		if(isAlpha(slice[0]) || slice[0]=='_'|| slice[0]=='-'){
 			uint charNum=1;
 			foreach(uint i,char ch;slice[1..$]){
 				if(!isAlphaNum(ch) && ch!='_' && ch!='-'	){
@@ -254,54 +297,68 @@ class Tokenizer{
 			currentTokenData.str=slice[0..charNum];
 			currentTokenData.token=Token.str;
 			slice=slice[charNum..$];
+
+			if(currentTokenData.str=="when"){
+				currentTokenData.token=Token.when;
+			}else if(currentTokenData.str=="not"){
+				currentTokenData.token=Token.not;
+			}
 			return true;
 		}
 		return false;
 	}
 
-     
-    void getLineAndCol(ref uint line,ref uint col){
-	line=col=0;
-	size_t currentCharNum=orginalData.length-slice.length;
-	foreach(char ch;orginalData[0..currentCharNum]){
-		col++;
-		if(ch=='\n'){
-			line++;
-			col=0;
-		}
-	}
-    }
-    string getLine(uint lineSearch){
-	uint lineStart,lineEnd,line;
-	bool foundStart=false;
-
-	foreach(uint i,char ch;orginalData){
-		if(line==lineSearch && foundStart==false){
-			foundStart=true;
-			lineStart=i;
-		}
-		if(ch=='\n'){
-			line++;
-		
-			if(foundStart){
-				lineEnd=i;
-				break;
+	
+	void getLineAndCol(ref uint line,ref uint col){
+		line=col=0;
+		size_t currentCharNum=orginalData.length-slice.length;
+		foreach(char ch;orginalData[0..currentCharNum]){
+			col++;
+			if(ch=='\n'){
+				line++;
+				col=0;
 			}
 		}
 	}
-	return orginalData[lineStart..lineEnd];
-    }
-    void printError(string msg){
+	string getLine(uint lineSearch){
+		uint lineStart,lineEnd,line;
+		bool foundStart=false;
+
+		foreach(uint i,char ch;orginalData){
+			if(line==lineSearch && foundStart==false){
+				foundStart=true;
+				lineStart=i;
+			}
+			if(ch=='\n'){
+				line++;
+				
+				if(foundStart){
+					lineEnd=i;
+					break;
+				}
+			}
+		}
+		return orginalData[lineStart..lineEnd];
+	}
+	void printError(string msg){
 		uint line,col;
 		getLineAndCol(line,col);
 		string lineString=getLine(line);
 		writefln("Error: %s",msg);
-		writefln("Line number: %2s, column: %2s. Line:",line,col);
+		writefln("Line number: %2s, column: %2s. Line:",line+1,col+1);
 		writeln(lineString );
 		foreach(i;0..col){
 			write(" ");
 		}
 		writeln("^");
-    }
+	}
+
+	void printAllTokens(){
+		while(1){
+			popToken();   
+			writeln(currentTokenData);        
+			if(currentTokenData.token==Token.none)break;
+		}
+	}
 
 }
